@@ -86,7 +86,7 @@
   <nav>
     <a href="../">← 피지컬AI</a>
     <a href="#arms">협동로봇 팔</a>
-    <a href="#platforms">이동형 · 양팔 · 휴머노이드</a>
+    <a href="#platforms">로봇 플랫폼</a>
     <a href="#hands">로봇 핸드</a>
   </nav>
 
@@ -98,7 +98,7 @@
   </section>
 
   <section id="platforms">
-    <h2>② 이동형 · 양팔 · 휴머노이드 <small id="plat-count"></small></h2>
+    <h2>② 로봇 플랫폼 (휴머노이드 · 양팔 · 4족 · AMR · 연구용 팔) <small id="plat-count"></small></h2>
     <p class="sec-desc">추가 요청(4족 로봇, AMR, 휴머노이드) 후보. <span class="chip">Slack</span> 은 댓글로 올라온 것, <span class="chip warn">추가 조사</span> 는 새로 찾은 것.</p>
     <div id="plat-groups"></div>
   </section>
@@ -1249,7 +1249,8 @@ function renderHands() {
 armTable();
 document.getElementById("arms-grid").innerHTML = ARMS.map(armCard).join("");
 const GROUPS = [["휴머노이드", c => c.startsWith("휴머노이드")], ["양팔 로봇", c => c.startsWith("양팔")],
-  ["모바일 매니퓰레이터", c => c.startsWith("모바일 매니퓰")], ["4족 로봇", c => c.startsWith("4족")], ["모바일 (AMR)", c => c.startsWith("모바일 (AMR")]];
+  ["고정형 양팔 / 데이터 수집 세트", c => c.startsWith("고정형")], ["모바일 매니퓰레이터", c => c.startsWith("모바일 매니퓰")],
+  ["4족 로봇", c => c.startsWith("4족")], ["모바일 (AMR)", c => c.startsWith("모바일 (AMR")], ["연구용 로봇팔 (단일)", c => c.startsWith("연구용")]];
 document.getElementById("plat-groups").innerHTML = GROUPS.map(([title, f]) => {
   const items = PLATFORMS.filter(p => f(p.category)).sort((a, b) => b.slack - a.slack);
   return `<h3>${title} <small>${items.length}종</small></h3>` + (items.length ? `<div class="grid">${items.map(platCard).join("")}</div>` : `<p class="sec-desc">아직 후보 없음</p>`);
