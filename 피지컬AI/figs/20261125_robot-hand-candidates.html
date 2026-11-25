@@ -1,0 +1,1269 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>로봇·핸드 후보</title>
+<style>
+  :root {
+    --bg:#fafaf9; --panel:#fff; --ink:#1c1917; --muted:#78716c; --line:#e7e5e4;
+    --chip:#f5f5f4; --accent:#2563eb; --accent-soft:#dbeafe; --warn:#b45309; --warn-soft:#fef3c7;
+    --bar:#93b4f5; --track:#efeeed;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:#1c1917; --panel:#262321; --ink:#f5f5f4; --muted:#a8a29e; --line:#3a3633;
+      --chip:#33302d; --accent:#60a5fa; --accent-soft:#1e3a5f; --warn:#fbbf24; --warn-soft:#422c06;
+      --bar:#3b6fd1; --track:#33302d;
+    }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.55 "Pretendard","Noto Sans KR",system-ui,sans-serif; }
+  main { max-width:1240px; margin:0 auto; padding:28px 16px 64px; }
+  h1 { font-size:24px; margin:0 0 4px; }
+  .lead { color:var(--muted); margin:0 0 20px; }
+  nav { position:sticky; top:0; z-index:5; background:var(--bg); display:flex; gap:6px; padding:10px 0; margin-bottom:8px; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  nav a { padding:6px 12px; border-radius:999px; background:var(--chip); color:var(--ink); text-decoration:none; font-size:14px; }
+  nav a:hover { background:var(--accent-soft); }
+  section { margin-top:32px; scroll-margin-top:60px; }
+  h2 { font-size:19px; margin:0 0 4px; }
+  h2 small { color:var(--muted); font-weight:400; font-size:14px; margin-left:6px; }
+  .sec-desc { color:var(--muted); margin:0 0 14px; font-size:14px; }
+
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr)); gap:14px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; }
+  .img { height:210px; background:#fff; display:flex; align-items:center; justify-content:center; border-bottom:1px solid var(--line); cursor:zoom-in; }
+  .img img { max-width:92%; max-height:92%; object-fit:contain; }
+  .img.none { background:var(--chip); color:var(--muted); font-size:13px; cursor:default; }
+  .body { padding:12px 14px 14px; display:flex; flex-direction:column; gap:8px; flex:1; }
+  .name { font-weight:700; font-size:16px; line-height:1.3; }
+  .maker { color:var(--muted); font-size:13px; margin-top:-6px; }
+  .chips { display:flex; flex-wrap:wrap; gap:4px; }
+  .chip { font-size:12px; padding:2px 8px; border-radius:999px; background:var(--chip); }
+  .chip.accent { background:var(--accent-soft); color:var(--accent); }
+  .chip.warn { background:var(--warn-soft); color:var(--warn); }
+  h3 { font-size:16px; margin:22px 0 10px; }
+  h3 small { color:var(--muted); font-weight:400; font-size:13px; margin-left:4px; }
+
+  .stat { font-size:13px; }
+  .stat .row { display:flex; justify-content:space-between; gap:8px; }
+  .stat .k { color:var(--muted); }
+  .stat .v { font-weight:600; text-align:right; }
+  .stat .v small { font-weight:400; color:var(--muted); }
+  .track { height:5px; background:var(--track); border-radius:3px; margin-top:3px; overflow:hidden; }
+  .track i { display:block; height:100%; background:var(--bar); border-radius:3px; }
+  .kv { display:grid; grid-template-columns:auto 1fr; gap:3px 10px; font-size:13px; margin:0; }
+  .kv dt { color:var(--muted); }
+  .kv dd { margin:0; font-weight:600; }
+  .point { font-size:13px; }
+  .price { margin-top:auto; padding-top:8px; border-top:1px dashed var(--line); font-size:14px; }
+  .price b { font-size:15px; }
+  .who { color:var(--muted); font-size:12px; }
+  .note { font-size:12px; color:var(--warn); }
+  .link { font-size:13px; color:var(--accent); text-decoration:none; }
+
+  table { width:100%; border-collapse:collapse; background:var(--panel); border:1px solid var(--line); font-size:14px; }
+  th, td { padding:8px 10px; border-bottom:1px solid var(--line); text-align:center; white-space:nowrap; }
+  th { background:var(--chip); font-weight:600; font-size:13px; }
+  td:first-child, th:first-child { text-align:left; }
+  td.on { color:var(--accent); font-weight:700; }
+  .tbl-wrap { overflow-x:auto; margin-bottom:16px; border-radius:12px; }
+
+  .controls { display:flex; flex-wrap:wrap; gap:8px 14px; align-items:center; margin:0 0 14px; font-size:14px; }
+  .controls select { padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font:inherit; }
+  .controls label { display:flex; align-items:center; gap:4px; cursor:pointer; }
+
+  #lb { position:fixed; inset:0; background:rgba(0,0,0,.8); display:none; align-items:center; justify-content:center; z-index:20; cursor:zoom-out; }
+  #lb img { max-width:92vw; max-height:90vh; background:#fff; border-radius:8px; }
+  footer { margin-top:40px; color:var(--muted); font-size:12px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>로봇 · 핸드 후보 정리</h1>
+  <p class="lead">Slack 후보 + 로봇 핸드 조사 결과. 가격은 댓글에 적힌 금액 또는 판매가/추정치이고, 스펙은 체감하기 쉬운 항목만 추렸음 (확인 못 한 값은 —).</p>
+
+  <nav>
+    <a href="../">← 피지컬AI</a>
+    <a href="#arms">협동로봇 팔</a>
+    <a href="#platforms">이동형 · 양팔 · 휴머노이드</a>
+    <a href="#hands">로봇 핸드</a>
+  </nav>
+
+  <section id="arms">
+    <h2>① 협동로봇 팔 <small id="arms-count"></small></h2>
+    <p class="sec-desc">섹션별 적용 로봇. 막대는 이 목록 안에서의 상대 크기.</p>
+    <div class="tbl-wrap"><table id="arms-table"></table></div>
+    <div class="grid" id="arms-grid"></div>
+  </section>
+
+  <section id="platforms">
+    <h2>② 이동형 · 양팔 · 휴머노이드 <small id="plat-count"></small></h2>
+    <p class="sec-desc">추가 요청(4족 로봇, AMR, 휴머노이드) 후보. <span class="chip">Slack</span> 은 댓글로 올라온 것, <span class="chip warn">추가 조사</span> 는 새로 찾은 것.</p>
+    <div id="plat-groups"></div>
+  </section>
+
+  <section id="hands">
+    <h2>③ 로봇 핸드 <small id="hands-count"></small></h2>
+    <p class="sec-desc">예산 총 2.2억 원, 2~3개 브랜드. <b>구동 관절</b>이 많을수록 손가락을 따로따로 섬세하게 움직일 수 있음. 무게 기준: 사람 손 ≈ 400 g. 손끝 힘 10 N ≈ 1 kg을 손가락으로 누르는 힘.</p>
+    <div class="controls">
+      <select id="h-sort">
+        <option value="default">기본 순서 (국산 · 가격 확인된 것 먼저)</option>
+        <option value="motors">구동 관절 많은 순</option>
+        <option value="weight">가벼운 순</option>
+        <option value="hook">들 수 있는 무게 큰 순</option>
+        <option value="tip">손끝 힘 센 순</option>
+      </select>
+      <label><input type="checkbox" id="h-kr"> 국산만</label>
+      <label><input type="checkbox" id="h-tac"> 촉각 있는 것만</label>
+      <label><input type="checkbox" id="h-price"> 가격 있는 것만</label>
+    </div>
+    <div class="grid" id="hands-grid"></div>
+  </section>
+
+  <footer>정리일 2026-11-25 · 핸드 목록·이미지 일부 출처: allhandsup.org · 나머지 이미지는 각 제조사/판매사 페이지</footer>
+</main>
+<div id="lb"><img alt=""></div>
+
+<script>
+const ARMS = [
+ {
+  "id": "rb10-1300",
+  "name": "RB10-1300",
+  "maker": "Rainbow Robotics",
+  "maker_ko": "레인보우로보틱스",
+  "origin": "국산",
+  "payload_kg": 10,
+  "reach_mm": 1300,
+  "dof": 6,
+  "weight_kg": 36.5,
+  "repeatability_mm": 0.05,
+  "url": "https://rainbow-robotics.com/en/products/rb10-1300/",
+  "img": "img/candidates/arm_rb10-1300.png",
+  "note": "이미지는 현행 RB10-1300E"
+ },
+ {
+  "id": "indy12",
+  "name": "Indy12",
+  "maker": "Neuromeka",
+  "maker_ko": "뉴로메카",
+  "origin": "국산",
+  "payload_kg": 12,
+  "reach_mm": 1200,
+  "dof": 6,
+  "weight_kg": 57,
+  "repeatability_mm": 0.1,
+  "url": "https://www.neuromeka.com/indy",
+  "img": "img/candidates/arm_indy12.png",
+  "note": "카탈로그(V3) 기준. 작업반경 1200 mm, 최대 도달 1700 mm. 같은 급 중 가장 무거움"
+ },
+ {
+  "id": "m1013",
+  "name": "M1013",
+  "maker": "Doosan Robotics",
+  "maker_ko": "두산로보틱스",
+  "origin": "국산",
+  "payload_kg": 10,
+  "reach_mm": 1300,
+  "dof": 6,
+  "weight_kg": 33,
+  "repeatability_mm": 0.05,
+  "url": "https://www.doosanrobotics.com/en/product-solutions/product/m-series/m1013",
+  "img": "img/candidates/arm_m1013.jpg"
+ },
+ {
+  "id": "ybl-a612",
+  "name": "YBL-A612",
+  "maker": "Yuil Robotics",
+  "maker_ko": "유일로보틱스",
+  "origin": "국산",
+  "payload_kg": 12,
+  "reach_mm": 1324,
+  "dof": null,
+  "weight_kg": 33.5,
+  "repeatability_mm": 0.1,
+  "url": "https://www.yuilrobotics.com/solutions/robot/collaborative-robot/ybl-series",
+  "img": "img/candidates/arm_ybl-a612.png",
+  "note": "회사명은 '유일로보틱스'. 축 수는 공식 자료에 없음 (외형상 6축)"
+ },
+ {
+  "id": "tm12s",
+  "name": "TM12S",
+  "maker": "Techman Robot (대만)",
+  "maker_ko": "테크맨로봇",
+  "origin": "외산",
+  "payload_kg": 12,
+  "reach_mm": 1300,
+  "dof": 6,
+  "weight_kg": 33,
+  "repeatability_mm": 0.03,
+  "url": "https://www.tm-robot.com/en/product/tm-ai-cobot-series/TM12S",
+  "img": "img/candidates/arm_tm12s.png",
+  "note": "손목 카메라 내장 (TM AI Cobot), IP65"
+ },
+ {
+  "id": "ur10e",
+  "name": "UR10e",
+  "maker": "Universal Robots (덴마크)",
+  "maker_ko": "유니버설로봇",
+  "origin": "외산",
+  "payload_kg": 10,
+  "reach_mm": 1300,
+  "dof": 6,
+  "weight_kg": 33.5,
+  "repeatability_mm": 0.05,
+  "url": "https://www.universal-robots.com/products/ur12e-1300/",
+  "img": "img/candidates/arm_ur10e.png"
+ },
+ {
+  "id": "rb5-850",
+  "name": "RB5-850",
+  "maker": "Rainbow Robotics",
+  "maker_ko": "레인보우로보틱스",
+  "origin": "국산",
+  "payload_kg": 5,
+  "reach_mm": 927.7,
+  "dof": 6,
+  "weight_kg": 22,
+  "repeatability_mm": 0.05,
+  "url": "https://rainbow-robotics.com/en/products/rb5-850/",
+  "img": "img/candidates/arm_rb5-850.png",
+  "note": "공식 도달거리 927.7 mm (모델명은 850)"
+ },
+ {
+  "id": "m0609",
+  "name": "M0609",
+  "maker": "Doosan Robotics",
+  "maker_ko": "두산로보틱스",
+  "origin": "국산",
+  "payload_kg": 6,
+  "reach_mm": 900,
+  "dof": 6,
+  "weight_kg": 27,
+  "repeatability_mm": 0.03,
+  "url": "https://www.doosanrobotics.com/en/product-solutions/product/m-series/m0609",
+  "img": "img/candidates/arm_m0609.jpg",
+  "note": "원문은 'M0690'이지만 없는 모델. M0609(6 kg / 900 mm)의 오타로 보임"
+ },
+ {
+  "id": "hdc50-17",
+  "name": "HDC50-17",
+  "maker": "HD Hyundai Robotics",
+  "maker_ko": "HD현대로보틱스",
+  "origin": "국산",
+  "payload_kg": 50,
+  "reach_mm": 1700,
+  "dof": 6,
+  "weight_kg": 215,
+  "repeatability_mm": 0.05,
+  "url": "https://www.hd-hyundairobotics.com/biz/product/detail/92",
+  "img": "img/candidates/arm_hdc50-17.png",
+  "note": "2026년 출시 '하이브리드 협동로봇'. 본체 215 kg으로 다른 후보와 체급이 완전히 다름 (산업용에 가까움)"
+ }
+];
+const PLATFORMS = [
+ {
+  "id": "mobed",
+  "name": "MobED",
+  "maker": "현대자동차그룹 Robotics LAB",
+  "category": "모바일 (AMR)",
+  "size": "115 × 75 cm, 높이 약 50 cm",
+  "weight": "83 kg",
+  "load": "짐 47 kg",
+  "time": "4시간 이상",
+  "speed": "최대 10 km/h (자전거 천천히)",
+  "point": "바퀴 4개를 따로 제어해서 경사·연석(최대 20 cm)에서도 몸체가 수평을 유지",
+  "url": "https://robotics.hyundai.com/unveiled-robots/mobile/mobedNew.do",
+  "img": "img/candidates/plat_mobed.png",
+  "price": "1억 초반",
+  "who": "현상미",
+  "slack": true
+ },
+ {
+  "id": "rb-kairos",
+  "name": "RB-KAIROS+",
+  "maker": "Robotnik (국내 판매 Roas)",
+  "category": "모바일 매니퓰레이터",
+  "size": "98 × 78 cm, 높이 101 cm",
+  "weight": "약 140 kg (팔 포함)",
+  "load": "짐 225 kg / 팔 끝 5 kg",
+  "time": "6~12시간",
+  "speed": "5.4 km/h (빠른 걸음)",
+  "point": "옆·대각선으로도 바로 이동(메카넘 휠). 구성: UR5e 팔(길이 85 cm) + Robotiq 2F-85 그리퍼(최대 8.5 cm 벌림)",
+  "url": "https://roas.co.kr/rb-kairos",
+  "img": "img/candidates/plat_rb-kairos.png",
+  "price": "약 1.5억 (예상치, 견적 필요)",
+  "who": "김강건",
+  "note": "사진 속 팔은 UR5e가 아닌 다른 UR 모델",
+  "slack": true
+ },
+ {
+  "id": "ai-worker",
+  "name": "AI Worker FFW-SG2",
+  "maker": "ROBOTIS (로보티즈)",
+  "category": "양팔 + 모바일",
+  "size": "키 162 cm, 60 × 60 cm",
+  "weight": "90 kg",
+  "load": "한 팔 3 kg / 양팔 6 kg",
+  "time": "미공개",
+  "speed": "5.4 km/h (빠른 걸음)",
+  "point": "사람 팔처럼 7관절인 팔 2개 + 상하 리프트 + 카메라 3대. 모방학습 데이터 수집용",
+  "url": "https://robotis.com/shop/item.php?it_id=905-0054-000",
+  "img": "img/candidates/plat_ai-worker.png",
+  "price": "79,200,000원",
+  "who": "김강건",
+  "note": "원격조종용 리더 장치는 별도",
+  "slack": true
+ },
+ {
+  "id": "cobot-magic",
+  "name": "Cobot Magic",
+  "maker": "AgileX Robotics",
+  "category": "양팔 + 모바일 (원격조종)",
+  "size": "베이스 69 × 57 cm",
+  "weight": "베이스 28~30 kg",
+  "load": "짐 100 kg / 팔 1.5 kg",
+  "time": "약 4시간",
+  "speed": "5.8 km/h (빠른 걸음)",
+  "point": "Mobile ALOHA 방식. 사람이 리더 팔 2개를 잡고 움직이면 로봇 팔 2개가 따라 해서 시연 데이터를 모음",
+  "url": "https://global.agilex.ai/products/cobot-magic",
+  "img": "img/candidates/plat_cobot-magic.webp",
+  "price": "약 $30,000 (해외 리셀러가)",
+  "slack": true
+ },
+ {
+  "id": "unitree-h2",
+  "name": "Unitree H2",
+  "maker": "Unitree Robotics",
+  "category": "휴머노이드",
+  "size": "키 182 cm",
+  "weight": "70 kg",
+  "load": "한 팔 7 kg (순간 15 kg)",
+  "time": "약 3시간",
+  "speed": null,
+  "point": "관절 31개 (다리 12, 팔 14, 허리 3, 머리 2). 성인 남성 크기",
+  "url": "https://www.unitree.com/H2",
+  "img": "img/candidates/plat_unitree-h2.jpg",
+  "price": "87,820,000원 (VAT 별도)",
+  "who": "조재영",
+  "note": "기본 구성에 손 포함 여부 미확인",
+  "slack": true
+ },
+ {
+  "id": "ai-sapiens",
+  "name": "AI Sapiens K1",
+  "maker": "ROBOTIS (로보티즈)",
+  "category": "휴머노이드",
+  "size": "키 135.5 cm",
+  "weight": "35 kg",
+  "load": "미공개",
+  "time": "미공개 (배터리 461 Wh)",
+  "speed": null,
+  "point": "관절 23개, 초등학생 크기. 손은 구동되지 않음 → 핸드 별도 필요",
+  "url": "https://docs.robotis.com/docs/systems/aisapiens/introduction",
+  "img": "img/candidates/plat_ai-sapiens.png",
+  "price": "약 8천만 원 (예상)",
+  "who": "조재영",
+  "note": "출시 전 모델, 내년 양산 예정",
+  "slack": true
+ },
+ {
+  "id": "rb-y1",
+  "name": "RB-Y1",
+  "maker": "레인보우로보틱스 (Rainbow Robotics)",
+  "category": "양팔 + 모바일",
+  "size": "키 140 cm, 바닥 60 × 69 cm",
+  "weight": "131 kg",
+  "load": "한 팔 3 kg",
+  "time": null,
+  "speed": "5.4 km/h (빠른 걸음)",
+  "point": "국산. 7축 팔 2개 + 6축 몸통이 바퀴 위에. 리더암·VR 원격조종 키트 옵션으로 데이터 수집에 바로 사용 가능",
+  "url": "https://rainbow-robotics.com/en/products/mobile-humanoid/rb-y-series/rb-y1/",
+  "img": "img/candidates/plat_rb-y1.png",
+  "price": "9,000만 원 (VAT 별도, 2024년 연구용 사전판매가)",
+  "note": "현재가는 견적 필요. 그리퍼 옵션. 사용 시간 미공개 (배터리 1,250 Wh)",
+  "slack": false
+ },
+ {
+  "id": "g1-d",
+  "name": "Unitree G1-D (바퀴형)",
+  "maker": "Unitree Robotics",
+  "category": "양팔 + 모바일",
+  "size": "키 126~168 cm (높이 조절)",
+  "weight": "약 90 kg",
+  "load": "한 팔 약 4 kg",
+  "time": "약 6시간",
+  "speed": "5.4 km/h (빠른 걸음)",
+  "point": "G1 상체(7축 팔 2개)를 높이 조절 기둥 + 바퀴 받침에 올린 데이터 수집용. 그리퍼/3지/5지 손 선택",
+  "url": "https://www.unitree.com/G1-D",
+  "img": "img/candidates/plat_g1-d.png",
+  "price": "약 $51,900~66,300 (미국 리셀러가, 추정)",
+  "note": "데이터 수집 플랫폼 연간 라이선스 별도 (약 $7,500)",
+  "slack": false
+ },
+ {
+  "id": "r1-pro",
+  "name": "Galaxea R1 Pro",
+  "maker": "Galaxea AI",
+  "category": "양팔 + 모바일",
+  "size": "최대 키 170 cm (작업 높이 0~200 cm)",
+  "weight": "126 kg",
+  "load": "한 팔 최대 5 kg",
+  "time": null,
+  "speed": null,
+  "point": "7축 팔 2개 + 접히는 허리 + 전방향 바퀴. 스탠퍼드 BRS 등 모방학습 연구에서 쓰인 R1 계열 상위 모델",
+  "url": "https://www.galaxea-ai.com/en/product2.html",
+  "img": "img/candidates/plat_r1-pro.png",
+  "price": "약 $44,500~70,000 (해외 리셀러가, 추정)",
+  "note": "국내 총판 미확인",
+  "slack": false
+ },
+ {
+  "id": "alice-m1",
+  "name": "ALICE M1",
+  "maker": "에이로봇 (AeiROBOT)",
+  "category": "양팔 + 모바일",
+  "size": "키 130~180 cm (허리 높이 조절)",
+  "weight": "97 kg",
+  "load": null,
+  "time": null,
+  "speed": null,
+  "point": "국산 바퀴형 휴머노이드. 7축 팔 + 6축 손 양쪽 포함, URDF 공개",
+  "url": "https://arobot-eng.imweb.me/2069803258",
+  "img": "img/candidates/plat_alice-m1.png",
+  "price": "약 $45,000~65,000 (추정, 공식은 문의)",
+  "note": "하중·사용 시간 미공개. 연구실 납품 사례 직접 확인 필요",
+  "slack": false
+ },
+ {
+  "id": "tiago-pro",
+  "name": "TIAGo Pro",
+  "maker": "PAL Robotics",
+  "category": "양팔 + 모바일",
+  "size": "키 120~155 cm, 바닥 50 × 72 cm",
+  "weight": "80 kg",
+  "load": "한 팔 3 kg",
+  "time": "약 4시간",
+  "speed": null,
+  "point": "토크센서 들어간 7축 팔 2개 + 메카넘 바퀴, ROS 2. Allegro 손·원격조종 스테이션 옵션",
+  "url": "https://pal-robotics.com/robot/tiago-pro",
+  "img": "img/candidates/plat_tiago-pro.webp",
+  "price": "약 $90,000 (추정, 공식은 견적)",
+  "note": "국내 대리점 미확인",
+  "slack": false
+ },
+ {
+  "id": "stretch-4",
+  "name": "Stretch 4",
+  "maker": "Hello Robot",
+  "category": "모바일 매니퓰레이터 (한 팔)",
+  "size": "키 160 cm, 바닥 지름 43 cm",
+  "weight": "46 kg",
+  "load": "팔 뻗으면 2.5 kg, 접으면 4 kg",
+  "time": "약 8시간",
+  "speed": "2.2 km/h (천천히 걷기)",
+  "point": "좁은 실내용 경량 로봇. 위아래·앞뒤로 늘어나는 팔 1개 + 그리퍼, 게임패드 원격조종 기본 포함",
+  "url": "https://hello-robot.com/stretch-4/",
+  "img": "img/candidates/plat_stretch-4.jpg",
+  "price": "$29,950 (공식가)",
+  "note": "국내 대리점: ROAS 등. 양팔 아님",
+  "slack": false
+ },
+ {
+  "id": "g1plus-edu",
+  "name": "Unitree G1+ EDU",
+  "maker": "Unitree Robotics",
+  "category": "휴머노이드",
+  "size": "키 134 cm",
+  "weight": "약 35 kg",
+  "load": "한 팔 약 4 kg",
+  "time": "약 2시간",
+  "speed": null,
+  "point": "가장 많이 쓰이는 소형 연구용 휴머노이드 G1의 2026년 개량형. Dex3 손 등 선택, EDU는 2차 개발 가능",
+  "url": "https://www.unitree.com/G1pl",
+  "img": "img/candidates/plat_g1plus-edu.png",
+  "price": "기본형 $15,000 (공식) / EDU 약 €39,000~ (리셀러, 추정)",
+  "note": "EDU 가격은 손·연산 모듈 구성에 따라 크게 달라짐",
+  "slack": false
+ },
+ {
+  "id": "booster-t2",
+  "name": "Booster T2",
+  "maker": "Booster Robotics",
+  "category": "휴머노이드",
+  "size": "키 약 140 cm",
+  "weight": "약 42 kg",
+  "load": "양팔 합계 최대 10 kg",
+  "time": "약 2시간",
+  "speed": "최대 약 10.8 km/h (조깅)",
+  "point": "7축 팔 포함 31관절, 375 TOPS 연산 내장. 손끝은 기본형/그리퍼/5지 손 선택",
+  "url": "https://www.booster.tech/booster-t2/",
+  "img": "img/candidates/plat_booster-t2.webp",
+  "price": "$29,900 (기본) / $39,900 (그리퍼) / $44,900 (손) (미국 대리점가)",
+  "note": "국내 판매처 미확인",
+  "slack": false
+ },
+ {
+  "id": "gr-3",
+  "name": "Fourier GR-3",
+  "maker": "Fourier",
+  "category": "휴머노이드",
+  "size": "키 165 cm",
+  "weight": "약 71 kg",
+  "load": "한 손 약 3 kg",
+  "time": "약 3시간 (배터리 교체식)",
+  "speed": "6.1 km/h (빠른 걸음)",
+  "point": "6축 손 기본 포함(12축 옵션), 부드러운 외피를 씌운 돌봄·상호작용형",
+  "url": "https://fftai.com/products-gr3series",
+  "img": "img/candidates/plat_gr-3.png",
+  "price": "약 $80,000~120,000 (추정, 공식가 비공개)",
+  "note": "연구용 SDK 공개 수준·국내 구매 가능 여부 확인 필요",
+  "slack": false
+ },
+ {
+  "id": "unitree-go2",
+  "name": "Unitree Go2 EDU",
+  "maker": "Unitree Robotics",
+  "category": "4족",
+  "size": "70 × 31 × 40 cm",
+  "weight": "약 15 kg",
+  "load": "짐 약 8 kg (최대 12 kg)",
+  "time": "약 2~4시간",
+  "speed": "약 13 km/h (조깅)",
+  "point": "가장 싸게 시작하는 연구용 4족. LiDAR·뎁스카메라·저수준 SDK가 있어 강화학습 sim-to-real 연구에 많이 쓰임",
+  "url": "https://www.unitree.com/go2",
+  "img": "img/candidates/plat_unitree-go2.jpg",
+  "price": "약 $14,000~15,600 (미국 리셀러가, 추정)",
+  "note": "반드시 EDU 버전 (AIR/PRO는 SDK 제한). 연산 모듈 구성에 따라 가격 차이 큼",
+  "slack": false
+ },
+ {
+  "id": "unitree-as2",
+  "name": "Unitree As2 EDU",
+  "maker": "Unitree Robotics",
+  "category": "4족",
+  "size": "72 × 38 × 46 cm",
+  "weight": "약 20 kg",
+  "load": "짐 약 15 kg",
+  "time": "약 4시간 (15 kg 실으면 2.5시간)",
+  "speed": "약 13 km/h (조깅)",
+  "point": "Go2만큼 작은데 IP54 방수, 25 cm 계단, 자동 충전 도크까지 있어 실외에서도 쓸 수 있는 2026년 신형",
+  "url": "https://www.unitree.com/As2",
+  "img": "img/candidates/plat_unitree-as2.png",
+  "price": "약 $11,900~19,900 (해외 리셀러가, 추정)",
+  "note": "SDK는 EDU 등급에서만 지원",
+  "slack": false
+ },
+ {
+  "id": "unitree-b2",
+  "name": "Unitree B2 / B2-W",
+  "maker": "Unitree Robotics",
+  "category": "4족",
+  "size": "약 110 × 45 × 65 cm",
+  "weight": "약 60 kg",
+  "load": "짐 40 kg 이상",
+  "time": "약 4~6시간",
+  "speed": "최대 22 km/h (자전거)",
+  "point": "IP67 완전 방수 대형 4족. 다리 끝에 바퀴 달린 B2-W, Z1 팔을 얹은 모바일 매니퓰레이터 구성 가능",
+  "url": "https://www.unitree.com/b2",
+  "img": "img/candidates/plat_unitree-b2.jpg",
+  "price": "약 $77,000~95,000 (리셀러가, 추정)",
+  "note": "사진은 B2-W(바퀴형). Z1 팔은 별도 약 $13,000",
+  "slack": false
+ },
+ {
+  "id": "deep-m20",
+  "name": "DEEP Robotics Lynx M20",
+  "maker": "DEEP Robotics",
+  "category": "4족",
+  "size": "약 82 × 43 × 57 cm",
+  "weight": "약 35 kg",
+  "load": "짐 15 kg",
+  "time": "약 3시간",
+  "speed": "평소 7.2 km/h (빠른 걸음)",
+  "point": "다리 끝이 바퀴라 평지는 굴러가고 계단·80 cm 단차는 걸어서 넘음. IP66, -20~55℃",
+  "url": "https://www.deeprobotics.cn/en/products/detail/1.html",
+  "img": "img/candidates/plat_deep-m20.webp",
+  "price": "약 $26,000~ (Pro 약 $55,000, 리셀러가, 추정)",
+  "note": "리셀러마다 가격 차이 매우 큼",
+  "slack": false
+ },
+ {
+  "id": "rainbow-rbq10",
+  "name": "RBQ-10",
+  "maker": "레인보우로보틱스 (Rainbow Robotics)",
+  "category": "4족",
+  "size": "98 × 43 × 62 cm",
+  "weight": "42 kg",
+  "load": "짐 15 kg",
+  "time": "약 2시간 (최대 4시간)",
+  "speed": "9 km/h (빠른 걸음), 달리기 14 km/h",
+  "point": "국산이라 AS·커스터마이징 쉬움. 관절 단위 제어 API·ROS2·MuJoCo 시뮬레이터 제공",
+  "url": "https://rainbow-robotics.com/en/products/rbq-10/",
+  "img": "img/candidates/plat_rainbow-rbq10.png",
+  "price": null,
+  "note": "공식 가격 없음, 견적 필요. 바퀴형 RBQ-10W 출시 예정",
+  "slack": false
+ },
+ {
+  "id": "bd-spot",
+  "name": "Boston Dynamics Spot (+ Arm)",
+  "maker": "Boston Dynamics",
+  "category": "4족",
+  "size": "110 × 50 cm, 높이 61 cm",
+  "weight": "34 kg",
+  "load": "짐 약 20 kg",
+  "time": "약 1.5시간 (배터리 교체식)",
+  "speed": "5.8 km/h (빠른 걸음)",
+  "point": "가장 오래 검증된 상용 4족. 공식 Spot Arm(그리퍼 팔)과 API·문서가 잘 갖춰져 있음",
+  "url": "https://bostondynamics.com/products/spot/",
+  "img": "img/candidates/plat_bd-spot.jpg",
+  "price": "본체 약 $75,000~ / Arm 포함 $100,000~140,000 (추정)",
+  "note": "공식가 비공개. Arm·센서 추가 시 2억 원에 근접 또는 초과 가능",
+  "slack": false
+ },
+ {
+  "id": "agilex-ranger-mini3",
+  "name": "AgileX Ranger Mini 3.0",
+  "maker": "AgileX Robotics",
+  "category": "모바일 (AMR)",
+  "size": "72 × 50 × 35 cm",
+  "weight": "73 kg",
+  "load": "짐 120 kg",
+  "time": "약 3~6시간",
+  "speed": "7.2 km/h (빠른 걸음)",
+  "point": "네 바퀴가 각각 방향을 바꿔 옆으로 가기·제자리 회전 가능. 팔이나 상체를 얹기 좋은 베이스",
+  "url": "https://www.agilex.ai/products/ranger-mini",
+  "img": "img/candidates/plat_agilex-ranger-mini3.png",
+  "price": "약 $11,900~13,700 (리셀러가, 추정)",
+  "note": "Cobot Magic과 같은 회사라 PiPER 팔과 조합 쉬움",
+  "slack": false
+ },
+ {
+  "id": "clearpath-ridgeback",
+  "name": "Clearpath Ridgeback + 팔",
+  "maker": "Clearpath Robotics",
+  "category": "모바일 매니퓰레이터",
+  "size": "96 × 79 × 31 cm (베이스)",
+  "weight": "135 kg (베이스)",
+  "load": "짐 100 kg",
+  "time": "최대 약 15시간",
+  "speed": "4 km/h (보통 걸음)",
+  "point": "메카넘 휠 전방향 베이스. Franka·UR·Kinova 팔(한 팔/두 팔) 통합과 ROS 2를 공식 지원하는 연구실 표준 플랫폼",
+  "url": "https://clearpathrobotics.com/ridgeback-indoor-robot-platform/",
+  "img": "img/candidates/plat_clearpath-ridgeback.png",
+  "price": "베이스만 약 $37,500 (팔 별도, 추정)",
+  "note": "RB-KAIROS+와 성격이 겹침. 사진은 UR5e 두 팔 구성",
+  "slack": false
+ }
+];
+const HANDS = [
+ {
+  "id": "allegro_v6f",
+  "name": "Allegro Hand V6 F",
+  "maker": "Wonik Robotics",
+  "maker_ko": "원익로보틱스",
+  "origin": "국산",
+  "fingers": 5,
+  "motors": 20,
+  "joints": 20,
+  "weight_g": 1150,
+  "hook_kg": 15,
+  "tip_N": null,
+  "tactile": "손끝",
+  "price": "~$15,000 (추정, 공식가 비공개)",
+  "url": "https://www.allegrohand.com/sub/product/p.php?idx=25",
+  "img": "img/candidates/hand_allegro.png",
+  "comment": "국산·AS 용이. Allegro는 RL·시뮬 연구 표준이라 레퍼런스 많음. 팔 장착용 적합, 휴머노이드엔 다소 무거움.",
+  "note": "V5 Plus의 후속 5지 모델"
+ },
+ {
+  "id": "robotis_hx5d20",
+  "name": "Robotis HX5-D20",
+  "maker": "Robotis",
+  "origin": "국산",
+  "maker_ko": "로보티즈",
+  "fingers": 5,
+  "motors": 20,
+  "joints": 20,
+  "weight_g": 1000,
+  "hook_kg": 15.0,
+  "tip_N": 14.0,
+  "tactile": "손끝",
+  "img": "img/candidates/hand_robotis-hx5.png",
+  "src": "allhandsup",
+  "price": "€5,800 / $7,704 (판매가)",
+  "url": "https://www.robotis.com/en/product/ecosystem-hx5-d20.php",
+  "comment": "국산·저가·20DOF·오픈소스 → 수량 구매 유력. AI Worker 옵션 핸드라 생태계 연동 좋음.",
+  "note": "가반 15 kg, 손끝 14 N. AI Sapiens 공식 호환은 미확인"
+ },
+ {
+  "id": "tesollo_dg5fm",
+  "name": "Tesollo DG-5F-M",
+  "maker": "Tesollo",
+  "origin": "국산",
+  "maker_ko": "테솔로",
+  "fingers": 5,
+  "motors": 20,
+  "joints": 20,
+  "weight_g": 1763.0,
+  "hook_kg": 12.0,
+  "tip_N": 97.0,
+  "tactile": "손끝",
+  "img": "img/candidates/hand_tesollo-dg5f.jpg",
+  "src": "allhandsup",
+  "price": "~$17,500 (RobotShop, 추정)",
+  "url": "https://en.tesollo.com/products/grippers/dg-5f-m",
+  "comment": "국산·고하중·URCap 지원 → 협동로봇 연구용으로 강함. 휴머노이드용은 경량형 DG-5F-S(880 g, M 가격의 약 60%).",
+  "note": "핀치 2.5/5 kg, 감싸쥐기 10/20 kg"
+ },
+ {
+  "id": "tesollo_dg5fs20",
+  "name": "Tesollo DG-5F-S",
+  "maker": "Tesollo",
+  "origin": "국산",
+  "maker_ko": "테솔로",
+  "fingers": 5,
+  "motors": 20,
+  "joints": 20,
+  "weight_g": 880.0,
+  "hook_kg": 12.0,
+  "tip_N": 19.4,
+  "tactile": "손끝",
+  "img": "img/candidates/hand_ahu_tesollo_dg5fs20.webp",
+  "src": "allhandsup"
+ },
+ {
+  "id": "wonik_allegrov5plus",
+  "name": "Wonik Allegro V5 Plus",
+  "maker": "Wonik Robotics",
+  "origin": "국산",
+  "maker_ko": "원익로보틱스",
+  "fingers": 4,
+  "motors": 16,
+  "joints": 16,
+  "weight_g": 1024.0,
+  "hook_kg": 15.0,
+  "tip_N": null,
+  "tactile": "손끝",
+  "img": "img/candidates/hand_ahu_wonik_allegrov5plus.webp",
+  "src": "allhandsup"
+ },
+ {
+  "id": "inspire_rh56dfx",
+  "name": "Inspire RH56DFX",
+  "maker": "Inspire Robots",
+  "origin": "해외",
+  "fingers": 5,
+  "motors": 6,
+  "joints": 12,
+  "weight_g": 540,
+  "hook_kg": null,
+  "tip_N": 10,
+  "tactile": "없음",
+  "price": "~$5,800–9,800 (리셀러, 추정)",
+  "url": "https://en.inspire-robots.com/product/rh56dfx/",
+  "img": "img/candidates/hand_inspire-rh56.jpg",
+  "comment": "저가·경량 → 다수 구매·양손 데이터 수집용. G1/H1 사용 사례 많음. 6DOF라 in-hand RL엔 한계.",
+  "note": "Unitree G1용 변형 RH56DFQ 있음"
+ },
+ {
+  "id": "psyonic_abilityhand",
+  "name": "Psyonic Ability Hand",
+  "maker": "PSYONIC",
+  "origin": "해외",
+  "maker_ko": null,
+  "fingers": 5,
+  "motors": 6,
+  "joints": null,
+  "weight_g": 490.0,
+  "hook_kg": null,
+  "tip_N": null,
+  "tactile": "손끝",
+  "img": "img/candidates/hand_psyonic-ability.png",
+  "src": "allhandsup",
+  "price": "~$15,000 (추정, 견적 필요)",
+  "url": "https://www.psyonic.io/robots",
+  "comment": "가볍고 IP64라 튼튼함. URCap으로 UR에 붙이기 쉬움. 6DOF라 정밀 조작은 제한적이지만 모방학습·그립 연구엔 적합.",
+  "note": "공식 ROS2 드라이버 미확인. 납기 30~60일"
+ },
+ {
+  "id": "shadow",
+  "name": "Shadow Dexterous Hand",
+  "maker": "Shadow Robot",
+  "origin": "해외",
+  "fingers": 5,
+  "motors": 20,
+  "joints": 24,
+  "weight_g": 4300,
+  "hook_kg": null,
+  "tip_N": null,
+  "tactile": "손끝",
+  "price": "~€110k (2022 공식 블로그, 시스템가)",
+  "url": "https://shadowrobot.com/dexterous-hand-series/",
+  "img": "img/candidates/hand_shadow.png",
+  "comment": "최고급 연구용이지만 1대에 예산 절반 이상. 4.3 kg라 UR10e급 필요, 휴머노이드 불가 → 수량 구매 대상 아님."
+ },
+ {
+  "id": "sharpa_wave",
+  "name": "Sharpa Wave",
+  "maker": "Sharpa Robotics",
+  "origin": "해외",
+  "maker_ko": null,
+  "fingers": 5,
+  "motors": 22,
+  "joints": 22,
+  "weight_g": 1300.0,
+  "hook_kg": 15.0,
+  "tip_N": null,
+  "tactile": "손끝",
+  "img": "img/candidates/hand_sharpa-wave.jpg",
+  "src": "allhandsup",
+  "price": "~$20k–50k (추정, 공식가 비공개)",
+  "url": "https://www.sharpa.com/pages/wave",
+  "comment": "고해상도 촉각 + 22DOF → VLA·촉각 연구 최상위급. 비싸서 1대 플래그십용.",
+  "note": "공식 이미지 해상도 낮음"
+ },
+ {
+  "id": "unitree_dex5s",
+  "name": "Unitree Dex5-S / Pro",
+  "maker": "Unitree Robotics",
+  "origin": "해외",
+  "fingers": 5,
+  "motors": 22,
+  "joints": 22,
+  "weight_g": 620,
+  "hook_kg": null,
+  "tip_N": null,
+  "tactile": "Pro만",
+  "price": "$6,350~ (공식)",
+  "url": "https://www.unitree.com/Dex5-S",
+  "img": "img/candidates/hand_unitree-dex5s.png",
+  "comment": "H2/G1 휴머노이드에 장착하기 가장 자연스러움. 22DOF·저가라 RL·수량 구매에 적합. 협동로봇엔 플랜지 제작 필요.",
+  "note": "연속 1 kg / 순간 2 kg까지 들어올림 (공식)"
+ },
+ {
+  "id": "agibot_omnihandpro",
+  "name": "Agibot Omnihand Pro",
+  "maker": "Agibot",
+  "origin": "해외",
+  "maker_ko": null,
+  "fingers": 5,
+  "motors": 12,
+  "joints": 19,
+  "weight_g": 750.0,
+  "hook_kg": 35.0,
+  "tip_N": 20.0,
+  "tactile": "손끝+손바닥",
+  "img": "img/candidates/hand_ahu_agibot_omnihandpro.webp",
+  "src": "allhandsup"
+ },
+ {
+  "id": "brainco_revo2",
+  "name": "Brainco Revo2",
+  "maker": "BrainCo",
+  "origin": "해외",
+  "maker_ko": null,
+  "fingers": 5,
+  "motors": 6,
+  "joints": 11,
+  "weight_g": 383.0,
+  "hook_kg": 20.0,
+  "tip_N": 15.0,
+  "tactile": "손끝",
+  "img": "img/candidates/hand_ahu_brainco_revo2.webp",
+  "src": "allhandsup"
+ },
+ {
+  "id": "brainco_revo3",
+  "name": "Brainco Revo3",
+  "maker": "BrainCo",
+  "origin": "해외",
+  "maker_ko": null,
+  "fingers": 5,
+  "motors": 21,
+  "joints": 21,
+  "weight_g": null,
+  "hook_kg": null,
+  "tip_N": 20.0,
+  "tactile": "손끝+손바닥",
+  "img": "img/candidates/hand_ahu_brainco_revo3.webp",
+  "src": "allhandsup"
+ },
+ {
+  "id": "cmu_leaphandv1",
+  "name": "CMU LEAP Hand V1",
+  "maker": "Carnegie Mellon Uni",
+  "origin": "해외",
+  "maker_ko": null,
+  "fingers": 4,
+  "motors": 16,
+  "joints": 16,
+  "weight_g": 595.0,
+  "hook_kg": null,
+  "tip_N": null,
+  "tactile": "없음",
+  "img": "img/candidates/hand_ahu_cmu_leaphandv1.webp",
+  "src": "allhandsup"
+ },
+ {
+  "id": "ethz_orcahandv1",
+  "name": "ETH Zurich Orcahand V1",
+  "maker": "ETH Zurich (Soft Robotics Lab)",
+  "origin": "해외",
+  "maker_ko": null,
+  "fingers": 5,
+  "motors": 16,
+  "joints": 17,
+  "weight_g": 1100.0,
+  "hook_kg": 2.0,
+  "tip_N": null,
+  "tactile": "없음",
+  "img": "img/candidates/hand_ahu_ethz_orcahandv1.webp",
+  "src": "allhandsup"
+ },
+ {
+  "id": "ethz_orcahandv2",
+  "name": "ETH Zurich Orcahand V2",
+  "maker": "ETH Zurich (Soft Robotics Lab)",
+  "origin": "해외",
+  "maker_ko": null,
+  "fingers": 5,
+  "motors": 17,
+  "joints": 17,
+  "weight_g": 1250.0,
+  "hook_kg": null,
+  "tip_N": null,
+  "tactile": "손끝",
+  "img": "img/candidates/hand_ahu_ethz_orcahandv2.webp",
+  "src": "allhandsup"
+ },
+ {
+  "id": "inspire_rh56f1",
+  "name": "Inspire RH56F1",
+  "maker": "Inspire Robotics",
+  "origin": "해외",
+  "maker_ko": null,
+  "fingers": 5,
+  "motors": 6,
+  "joints": 12,
+  "weight_g": 630.0,
+  "hook_kg": 30.0,
+  "tip_N": 15.0,
+  "tactile": "손끝+손바닥",
+  "img": "img/candidates/hand_ahu_inspire_rh56f1.webp",
+  "src": "allhandsup"
+ },
+ {
+  "id": "linkerbot_l20",
+  "name": "Linkerbot L20",
+  "maker": "Linkerbot",
+  "origin": "해외",
+  "maker_ko": null,
+  "fingers": 5,
+  "motors": 16,
+  "joints": 21,
+  "weight_g": 1000.0,
+  "hook_kg": 5.0,
+  "tip_N": 10.0,
+  "tactile": "손끝+손바닥",
+  "img": "img/candidates/hand_ahu_linkerbot_l20.webp",
+  "src": "allhandsup"
+ },
+ {
+  "id": "oymotion_rohand",
+  "name": "OYMotion ROHand",
+  "maker": "OYMotion",
+  "origin": "해외",
+  "maker_ko": null,
+  "fingers": 5,
+  "motors": 6,
+  "joints": 11,
+  "weight_g": 680.0,
+  "hook_kg": 30.0,
+  "tip_N": null,
+  "tactile": "손끝",
+  "img": "img/candidates/hand_ahu_oymotion_rohand.webp",
+  "src": "allhandsup"
+ },
+ {
+  "id": "proception_prohandgen2",
+  "name": "Proception ProHand Gen2",
+  "maker": "Proception",
+  "origin": "해외",
+  "maker_ko": null,
+  "fingers": 5,
+  "motors": 20,
+  "joints": 22,
+  "weight_g": 500,
+  "hook_kg": 20.0,
+  "tip_N": 15.0,
+  "tactile": "손끝+손바닥",
+  "img": "img/candidates/hand_ahu_proception_prohandgen2.webp",
+  "src": "allhandsup",
+  "note": "손목·구동부 포함 시 2,675 g"
+ },
+ {
+  "id": "robotera_xhand1",
+  "name": "Robotera XHAND 1",
+  "maker": "Robotera",
+  "origin": "해외",
+  "maker_ko": null,
+  "fingers": 5,
+  "motors": 12,
+  "joints": 12,
+  "weight_g": 1100.0,
+  "hook_kg": null,
+  "tip_N": 15.0,
+  "tactile": "손끝",
+  "img": "img/candidates/hand_ahu_robotera_xhand1.webp",
+  "src": "allhandsup"
+ },
+ {
+  "id": "robotera_xhand1pro",
+  "name": "Robotera XHAND 1 Pro",
+  "maker": "Robotera",
+  "origin": "해외",
+  "maker_ko": null,
+  "fingers": 5,
+  "motors": 21,
+  "joints": 21,
+  "weight_g": 884.0,
+  "hook_kg": null,
+  "tip_N": 15.0,
+  "tactile": "손끝+손바닥",
+  "img": "img/candidates/hand_ahu_robotera_xhand1pro.webp",
+  "src": "allhandsup"
+ },
+ {
+  "id": "ruiyan_ryh2",
+  "name": "Ruiyan RY-H2",
+  "maker": "Ruiyan",
+  "origin": "해외",
+  "maker_ko": null,
+  "fingers": 5,
+  "motors": 6,
+  "joints": 11,
+  "weight_g": 560.0,
+  "hook_kg": 5.0,
+  "tip_N": 10.0,
+  "tactile": "옵션",
+  "img": "img/candidates/hand_ahu_ruiyan_ryh2.webp",
+  "src": "allhandsup"
+ },
+ {
+  "id": "ruiyan_ryh5",
+  "name": "Ruiyan RY-H5",
+  "maker": "Ruiyan",
+  "origin": "해외",
+  "maker_ko": null,
+  "fingers": 5,
+  "motors": 6,
+  "joints": 15,
+  "weight_g": 670.0,
+  "hook_kg": 5.0,
+  "tip_N": 29.0,
+  "tactile": "손끝",
+  "img": "img/candidates/hand_ahu_ruiyan_ryh5.webp",
+  "src": "allhandsup"
+ },
+ {
+  "id": "rysen_apexhand",
+  "name": "Rysen Apex Hand",
+  "maker": "Rysen Robotics",
+  "origin": "해외",
+  "maker_ko": null,
+  "fingers": 5,
+  "motors": 16,
+  "joints": 21,
+  "weight_g": 1300.0,
+  "hook_kg": 20.0,
+  "tip_N": 20.0,
+  "tactile": "손끝+손바닥",
+  "img": "img/candidates/hand_ahu_rysen_apexhand.webp",
+  "src": "allhandsup"
+ },
+ {
+  "id": "wuji_wujihandv1.1",
+  "name": "Wuji Hand V1.1",
+  "maker": "Wuji Tech",
+  "origin": "해외",
+  "maker_ko": null,
+  "fingers": 5,
+  "motors": 20,
+  "joints": 20,
+  "weight_g": 590.0,
+  "hook_kg": 20.0,
+  "tip_N": 15.0,
+  "tactile": "없음",
+  "img": "img/candidates/hand_ahu_wuji_wujihandv1.1.webp",
+  "src": "allhandsup"
+ },
+ {
+  "id": "wuji_wujihandv2",
+  "name": "Wuji Hand V2",
+  "maker": "Wuji Tech",
+  "origin": "해외",
+  "maker_ko": null,
+  "fingers": 5,
+  "motors": 20,
+  "joints": 20,
+  "weight_g": 800.0,
+  "hook_kg": null,
+  "tip_N": 15.0,
+  "tactile": "없음",
+  "img": "img/candidates/hand_ahu_wuji_wujihandv2.webp",
+  "src": "allhandsup"
+ },
+ {
+  "id": "xynova_flex2",
+  "name": "Xynova Flex 2",
+  "maker": "Xynova",
+  "origin": "해외",
+  "maker_ko": null,
+  "fingers": 5,
+  "motors": 23,
+  "joints": 23,
+  "weight_g": 400.0,
+  "hook_kg": 8.0,
+  "tip_N": 20.0,
+  "tactile": "손끝+손바닥",
+  "img": "img/candidates/hand_ahu_xynova_flex2.webp",
+  "src": "allhandsup"
+ },
+ {
+  "id": "xynova_prima1",
+  "name": "Xynova Prima 1",
+  "maker": "Xynova",
+  "origin": "해외",
+  "maker_ko": null,
+  "fingers": 5,
+  "motors": 22,
+  "joints": 22,
+  "weight_g": 850.0,
+  "hook_kg": null,
+  "tip_N": 15.0,
+  "tactile": "손끝+손바닥",
+  "img": "img/candidates/hand_ahu_xynova_prima1.webp",
+  "src": "allhandsup"
+ }
+];
+
+const SEC13 = ["rb10-1300","indy12","m1013","ybl-a612","tm12s","ur10e"];
+const SEC2  = { "indy12":1, "ur10e":2, "rb5-850":3, "m0609":4, "ybl-a612":5, "hdc50-17":6 };
+
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const has = x => x !== null && x !== undefined && x !== "";
+const fmt = n => !has(n) ? "" : Number.isInteger(n) ? n.toLocaleString() : (+n.toFixed(1)).toLocaleString();
+
+function imgBox(it) {
+  return it.img
+    ? `<div class="img"><img src="${esc(it.img)}" alt="${esc(it.name)}" loading="lazy" onerror="this.parentNode.className='img none';this.parentNode.textContent='이미지 없음'"></div>`
+    : `<div class="img none">이미지 없음</div>`;
+}
+function stat(label, value, max, text, extra="") {
+  const pct = has(value) && max ? Math.min(100, Math.max(3, value / max * 100)) : 0;
+  return `<div class="stat"><div class="row"><span class="k">${label}</span><span class="v">${has(value) ? text + (extra ? ` <small>${extra}</small>` : "") : "—"}</span></div>
+    <div class="track">${pct ? `<i style="width:${pct}%"></i>` : ""}</div></div>`;
+}
+function foot(it) {
+  return `${it.note ? `<div class="note">※ ${esc(it.note)}</div>` : ""}${it.url ? `<a class="link" href="${esc(it.url)}" target="_blank" rel="noopener">제품 페이지 ↗</a>` : ""}`;
+}
+function priceBox(it) {
+  if (!it.price && !it.who) return "";
+  return `<div class="price">${it.price ? `<b>${esc(it.price)}</b>` : ""}${it.who ? ` <span class="who">· ${esc(it.who)}</span>` : ""}</div>`;
+}
+const maxOf = (arr, k) => Math.max(...arr.map(x => x[k]).filter(has));
+
+/* ① 팔 */
+const AM = { p: maxOf(ARMS,"payload_kg"), r: maxOf(ARMS,"reach_mm"), w: maxOf(ARMS,"weight_kg") };
+function armCard(a) {
+  const chips = [`<span class="chip ${a.origin==="국산"?"accent":""}">${esc(a.origin)}</span>`];
+  if (SEC13.includes(a.id)) chips.push(`<span class="chip">1·3섹션</span>`);
+  if (SEC2[a.id]) chips.push(`<span class="chip">2섹션 CELL ${SEC2[a.id]}</span>`);
+  return `<div class="card">${imgBox(a)}<div class="body">
+    <div class="name">${esc(a.name)}</div><div class="maker">${esc(a.maker_ko || "")} · ${esc(a.maker)}</div>
+    <div class="chips">${chips.join("")}</div>
+    ${stat("들 수 있는 무게", a.payload_kg, AM.p, `${fmt(a.payload_kg)} kg`)}
+    ${stat("팔 길이", a.reach_mm, AM.r, `${fmt(a.reach_mm/1000)} m`)}
+    ${stat("로봇 무게", a.weight_kg, AM.w, `${fmt(a.weight_kg)} kg`)}
+    ${foot(a)}</div></div>`;
+}
+function armTable() {
+  const order = [...new Set([...SEC13, ...Object.keys(SEC2)])];
+  const byId = Object.fromEntries(ARMS.map(a => [a.id, a]));
+  const head = `<tr><th>로봇</th><th>구분</th><th>1·3섹션</th>${[1,2,3,4,5,6].map(n=>`<th>2섹션<br>CELL ${n}</th>`).join("")}</tr>`;
+  const rows = order.map(id => {
+    const a = byId[id];
+    return `<tr><td><b>${esc(a.name)}</b> <span class="who">${esc(a.maker_ko||"")}</span></td><td>${esc(a.origin)}</td>
+      <td class="${SEC13.includes(id)?"on":""}">${SEC13.includes(id)?"●":""}</td>
+      ${[1,2,3,4,5,6].map(n=>`<td class="${SEC2[id]===n?"on":""}">${SEC2[id]===n?"●":""}</td>`).join("")}</tr>`;
+  }).join("");
+  document.getElementById("arms-table").innerHTML = head + rows;
+}
+
+/* ② 플랫폼 */
+function platCard(p) {
+  const kv = [["크기", p.size], ["무게", p.weight], ["들 수 있는 무게", p.load], ["사용 시간", p.time], ["속도", p.speed]]
+    .filter(([,v]) => has(v)).map(([k,v]) => `<dt>${k}</dt><dd>${esc(v)}</dd>`).join("");
+  return `<div class="card">${imgBox(p)}<div class="body">
+    <div class="name">${esc(p.name)}</div><div class="maker">${esc(p.maker)}</div>
+    <div class="chips"><span class="chip accent">${esc(p.category)}</span>${p.slack ? `<span class="chip">Slack</span>` : `<span class="chip warn">추가 조사</span>`}</div>
+    <dl class="kv">${kv}</dl>
+    <div class="point">${esc(p.point)}</div>
+    ${foot(p)}${priceBox(p)}</div></div>`;
+}
+
+/* ③ 핸드 */
+const HM = { m: maxOf(HANDS,"motors"), w: maxOf(HANDS.filter(h=>h.weight_g<3000),"weight_g"), h: maxOf(HANDS,"hook_kg"), t: maxOf(HANDS,"tip_N") };
+function handCard(h) {
+  const chips = [`<span class="chip ${h.origin==="국산"?"accent":""}">${esc(h.origin)}</span>`, `<span class="chip">손가락 ${h.fingers}개</span>`,
+                 `<span class="chip">촉각 ${esc(h.tactile)}</span>`];
+  const ratio = has(h.weight_g) ? `사람 손의 ${fmt(h.weight_g/400)}배` : "";
+  return `<div class="card">${imgBox(h)}<div class="body">
+    <div class="name">${esc(h.name)}</div><div class="maker">${esc(h.maker_ko ? h.maker_ko + " · " : "")}${esc(h.maker)}</div>
+    <div class="chips">${chips.join("")}</div>
+    ${stat("구동 관절", h.motors, HM.m, `${h.motors}개`, has(h.joints) && h.joints !== h.motors ? `(전체 관절 ${h.joints})` : "")}
+    ${stat("무게", h.weight_g, HM.w, `${fmt(h.weight_g)} g`, ratio)}
+    ${stat("들 수 있는 무게", h.hook_kg, HM.h, `${fmt(h.hook_kg)} kg`)}
+    ${stat("손끝 힘", h.tip_N, HM.t, `${fmt(h.tip_N)} N`, has(h.tip_N) ? `≈ ${fmt(h.tip_N/9.8)} kg` : "")}
+    ${h.comment ? `<div class="point">${esc(h.comment)}</div>` : ""}
+    ${foot(h)}${h.price ? `<div class="price"><b>${esc(h.price)}</b></div>` : ""}</div></div>`;
+}
+function renderHands() {
+  const sort = document.getElementById("h-sort").value;
+  let list = HANDS.slice();
+  if (document.getElementById("h-kr").checked) list = list.filter(h => h.origin === "국산");
+  if (document.getElementById("h-tac").checked) list = list.filter(h => h.tactile !== "없음");
+  if (document.getElementById("h-price").checked) list = list.filter(h => h.price);
+  const desc = k => (a, b) => (b[k] ?? -1) - (a[k] ?? -1);
+  if (sort === "motors") list.sort(desc("motors"));
+  if (sort === "hook") list.sort(desc("hook_kg"));
+  if (sort === "tip") list.sort(desc("tip_N"));
+  if (sort === "weight") list.sort((a, b) => (a.weight_g ?? 1e9) - (b.weight_g ?? 1e9));
+  document.getElementById("hands-grid").innerHTML = list.map(handCard).join("");
+  document.getElementById("hands-count").textContent = `${list.length} / ${HANDS.length}종`;
+}
+["h-sort","h-kr","h-tac","h-price"].forEach(id => document.getElementById(id).addEventListener("input", renderHands));
+
+armTable();
+document.getElementById("arms-grid").innerHTML = ARMS.map(armCard).join("");
+const GROUPS = [["휴머노이드", c => c.startsWith("휴머노이드")], ["양팔 로봇", c => c.startsWith("양팔")],
+  ["모바일 매니퓰레이터", c => c.startsWith("모바일 매니퓰")], ["4족 로봇", c => c.startsWith("4족")], ["모바일 (AMR)", c => c.startsWith("모바일 (AMR")]];
+document.getElementById("plat-groups").innerHTML = GROUPS.map(([title, f]) => {
+  const items = PLATFORMS.filter(p => f(p.category)).sort((a, b) => b.slack - a.slack);
+  return `<h3>${title} <small>${items.length}종</small></h3>` + (items.length ? `<div class="grid">${items.map(platCard).join("")}</div>` : `<p class="sec-desc">아직 후보 없음</p>`);
+}).join("");
+document.getElementById("arms-count").textContent = `${ARMS.length}종`;
+document.getElementById("plat-count").textContent = `${PLATFORMS.length}종`;
+renderHands();
+
+const lb = document.getElementById("lb");
+document.addEventListener("click", e => {
+  const img = e.target.closest(".img:not(.none)")?.querySelector("img");
+  if (img) { lb.querySelector("img").src = img.src; lb.style.display = "flex"; }
+  else if (e.target.closest("#lb")) lb.style.display = "none";
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>피지컬AI 루프</title>
+<style>
+  :root {
+    --bg: #fafaf9; --panel: #ffffff; --ink: #1c1917; --muted: #78716c;
+    --line: #a8a29e; --box: #f5f5f4; --box-stroke: #57534e;
+    --accent: #2563eb; --accent-soft: #dbeafe;
+    --warn: #dc2626; --ok: #16a34a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1917; --panel: #262321; --ink: #f5f5f4; --muted: #a8a29e;
+      --line: #78716c; --box: #33302d; --box-stroke: #d6d3d1;
+      --accent: #60a5fa; --accent-soft: #1e3a5f;
+      --warn: #f87171; --ok: #4ade80;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.55 "Pretendard", "Noto Sans KR", system-ui, sans-serif;
+  }
+  main { max-width: 1100px; margin: 0 auto; padding: 28px 16px 48px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .caption { color: var(--muted); margin: 0 0 20px; }
+  .canvas {
+    background: var(--panel); border: 1px solid color-mix(in srgb, var(--line) 40%, transparent);
+    border-radius: 12px; padding: 16px; overflow-x: auto;
+  }
+  svg { display: block; width: 100%; height: auto; }
+  .notes { margin-top: 16px; color: var(--muted); font-size: 14px; }
+  .notes li { margin: 2px 0; }
+
+  /* ── SVG 빌딩 블록 ── */
+  svg text { fill: var(--ink); font-family: inherit; font-size: 14px; }
+  svg .label { text-anchor: middle; dominant-baseline: middle; }
+  svg .sub { fill: var(--muted); font-size: 12px; }
+  svg .title { font-weight: 600; }
+  svg .box { fill: var(--box); stroke: var(--box-stroke); stroke-width: 1.4; rx: 10; }
+  svg .box.accent { fill: var(--accent-soft); stroke: var(--accent); }
+  svg .box.ghost { fill: none; stroke: var(--line); stroke-dasharray: 5 4; }
+  svg .edge { fill: none; stroke: var(--line); stroke-width: 1.6; marker-end: url(#arrow); }
+  svg .edge.accent { stroke: var(--accent); marker-end: url(#arrow-accent); }
+  svg .edge.dashed { stroke-dasharray: 6 4; }
+  svg .edge-label { fill: var(--muted); font-size: 12px; text-anchor: middle; }
+</style>
+</head>
+<body>
+<main>
+  <h1>피지컬AI 기본 루프 (예시)</h1>
+  <p class="caption">센서로 세상을 보고 → AI가 판단하고 → 몸으로 움직이면 → 환경이 바뀌고 다시 관측되는 닫힌 루프.</p>
+
+  <div class="canvas">
+    <svg viewBox="0 0 1000 410" role="img" aria-label="피지컬AI 인식-판단-행동 루프">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" style="fill: var(--line)"/>
+        </marker>
+        <marker id="arrow-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" style="fill: var(--accent)"/>
+        </marker>
+      </defs>
+
+      <!-- AI 영역 -->
+      <rect class="box ghost" x="280" y="50" width="700" height="135"/>
+      <text class="sub" x="292" y="70">AI 모델 (두뇌)</text>
+
+      <!-- 윗줄: 센서 → 인식 → 월드모델 → 정책 -->
+      <rect class="box" x="60" y="80" width="180" height="80"/>
+      <text class="label title" x="150" y="112">센서</text>
+      <text class="label sub" x="150" y="134">카메라 · LiDAR · IMU</text>
+
+      <rect class="box" x="300" y="90" width="180" height="80"/>
+      <text class="label title" x="390" y="122">인식</text>
+      <text class="label sub" x="390" y="144">Perception</text>
+
+      <rect class="box accent" x="540" y="90" width="180" height="80"/>
+      <text class="label title" x="630" y="122">월드 모델</text>
+      <text class="label sub" x="630" y="144">상태 추정 · 예측</text>
+
+      <rect class="box" x="780" y="90" width="180" height="80"/>
+      <text class="label title" x="870" y="122">계획 / 정책</text>
+      <text class="label sub" x="870" y="144">Planning · Policy</text>
+
+      <path class="edge" d="M240,125 L300,130"/>
+      <path class="edge" d="M480,130 L540,130"/>
+      <path class="edge" d="M720,130 L780,130"/>
+      <text class="edge-label" x="510" y="120">특징</text>
+      <text class="edge-label" x="750" y="120">s<tspan baseline-shift="sub" font-size="9">t</tspan></text>
+
+      <!-- 아랫줄: 환경 ← 로봇 ← 제어 -->
+      <rect class="box ghost" x="60" y="300" width="420" height="80"/>
+      <text class="label title" x="270" y="332">물리 환경</text>
+      <text class="label sub" x="270" y="354">물체 · 사람 · 중력 · 마찰</text>
+
+      <rect class="box" x="540" y="300" width="180" height="80"/>
+      <text class="label title" x="630" y="332">로봇 몸체</text>
+      <text class="label sub" x="630" y="354">모터 · 관절 · 그리퍼</text>
+
+      <rect class="box" x="780" y="300" width="180" height="80"/>
+      <text class="label title" x="870" y="332">저수준 제어</text>
+      <text class="label sub" x="870" y="354">PID · 토크 제어</text>
+
+      <path class="edge accent" d="M870,170 L870,300"/>
+      <text class="edge-label" x="900" y="240" style="text-anchor:start">행동 a<tspan baseline-shift="sub" font-size="9">t</tspan></text>
+
+      <path class="edge" d="M780,340 L720,340"/>
+      <text class="edge-label" x="750" y="330">명령</text>
+
+      <path class="edge" d="M540,340 L480,340"/>
+      <text class="edge-label" x="510" y="330">힘</text>
+
+      <path class="edge" d="M150,300 L150,160"/>
+      <text class="edge-label" x="138" y="235" style="text-anchor:end">관측 o<tspan baseline-shift="sub" font-size="9">t</tspan></text>
+
+      <path class="edge dashed" d="M630,300 L630,170"/>
+      <text class="edge-label" x="642" y="240" style="text-anchor:start">관절 상태</text>
+    </svg>
+  </div>
+
+  <ul class="notes">
+    <li>세팅 확인용 예시 그림입니다. 필요 없으면 지워도 됩니다.</li>
+    <li>점선: 로봇 자신의 관절 상태(고유수용 감각)가 월드 모델로 바로 들어감.</li>
+  </ul>
+</main>
+
+<!--
+  Mermaid로 빠르게 그릴 때: 위 .canvas 안의 <svg>를 아래로 교체하고 스크립트 추가
+  <pre class="mermaid">
+  flowchart LR
+    A[카메라] --> B[인식] --> C[계획] --> D[제어] --> E((로봇))
+  </pre>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.esm.min.mjs";
+    const dark = matchMedia("(prefers-color-scheme: dark)").matches;
+    mermaid.initialize({ startOnLoad: true, theme: dark ? "dark" : "neutral" });
+  </script>
+-->
+</body>
+</html>

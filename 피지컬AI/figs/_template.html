@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>그림 제목</title>
+<style>
+  :root {
+    --bg: #fafaf9; --panel: #ffffff; --ink: #1c1917; --muted: #78716c;
+    --line: #a8a29e; --box: #f5f5f4; --box-stroke: #57534e;
+    --accent: #2563eb; --accent-soft: #dbeafe;
+    --warn: #dc2626; --ok: #16a34a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1c1917; --panel: #262321; --ink: #f5f5f4; --muted: #a8a29e;
+      --line: #78716c; --box: #33302d; --box-stroke: #d6d3d1;
+      --accent: #60a5fa; --accent-soft: #1e3a5f;
+      --warn: #f87171; --ok: #4ade80;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 15px/1.55 "Pretendard", "Noto Sans KR", system-ui, sans-serif;
+  }
+  main { max-width: 1100px; margin: 0 auto; padding: 28px 16px 48px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .caption { color: var(--muted); margin: 0 0 20px; }
+  .canvas {
+    background: var(--panel); border: 1px solid color-mix(in srgb, var(--line) 40%, transparent);
+    border-radius: 12px; padding: 16px; overflow-x: auto;
+  }
+  svg { display: block; width: 100%; height: auto; }
+  .notes { margin-top: 16px; color: var(--muted); font-size: 14px; }
+  .notes li { margin: 2px 0; }
+
+  /* ── SVG 빌딩 블록 ── */
+  svg text { fill: var(--ink); font-family: inherit; font-size: 14px; }
+  svg .label { text-anchor: middle; dominant-baseline: middle; }
+  svg .sub { fill: var(--muted); font-size: 12px; }
+  svg .title { font-weight: 600; }
+  svg .box { fill: var(--box); stroke: var(--box-stroke); stroke-width: 1.4; rx: 10; }
+  svg .box.accent { fill: var(--accent-soft); stroke: var(--accent); }
+  svg .box.ghost { fill: none; stroke: var(--line); stroke-dasharray: 5 4; }
+  svg .edge { fill: none; stroke: var(--line); stroke-width: 1.6; marker-end: url(#arrow); }
+  svg .edge.accent { stroke: var(--accent); marker-end: url(#arrow-accent); }
+  svg .edge.dashed { stroke-dasharray: 6 4; }
+  svg .edge-label { fill: var(--muted); font-size: 12px; text-anchor: middle; }
+</style>
+</head>
+<body>
+<main>
+  <h1>그림 제목</h1>
+  <p class="caption">한두 줄 설명</p>
+
+  <div class="canvas">
+    <svg viewBox="0 0 1000 400" role="img" aria-label="그림 제목">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" style="fill: var(--line)"/>
+        </marker>
+        <marker id="arrow-accent" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0,0 L10,5 L0,10 z" style="fill: var(--accent)"/>
+        </marker>
+      </defs>
+
+      <!-- 예시: 박스 두 개 + 화살표 -->
+      <rect class="box" x="120" y="160" width="200" height="80"/>
+      <text class="label title" x="220" y="192">입력</text>
+      <text class="label sub" x="220" y="214">Input</text>
+
+      <rect class="box accent" x="680" y="160" width="200" height="80"/>
+      <text class="label title" x="780" y="192">출력</text>
+      <text class="label sub" x="780" y="214">Output</text>
+
+      <path class="edge" d="M320,200 L680,200"/>
+      <text class="edge-label" x="500" y="188">처리</text>
+    </svg>
+  </div>
+
+  <ul class="notes">
+    <li>메모/가정 사항 (필요 없으면 삭제)</li>
+  </ul>
+</main>
+
+<!--
+  Mermaid로 빠르게 그릴 때: 위 .canvas 안의 <svg>를 아래로 교체하고 스크립트 추가
+  <pre class="mermaid">
+  flowchart LR
+    A[카메라] --> B[인식] --> C[계획] --> D[제어] --> E((로봇))
+  </pre>
+  <script type="module">
+    import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.esm.min.mjs";
+    const dark = matchMedia("(prefers-color-scheme: dark)").matches;
+    mermaid.initialize({ startOnLoad: true, theme: dark ? "dark" : "neutral" });
+  </script>
+-->
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>작업 공유</title>
+<meta name="description" content="작업별 정리 페이지 모음">
+<style>
+  :root {
+    --bg:#fafaf9; --panel:#fff; --ink:#1c1917; --muted:#78716c; --line:#e7e5e4;
+    --chip:#f5f5f4; --accent:#2563eb; --accent-soft:#dbeafe;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:#1c1917; --panel:#262321; --ink:#f5f5f4; --muted:#a8a29e; --line:#3a3633;
+      --chip:#33302d; --accent:#60a5fa; --accent-soft:#1e3a5f;
+    }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.55 "Pretendard","Noto Sans KR",system-ui,sans-serif; }
+  main { max-width:960px; margin:0 auto; padding:48px 16px 64px; }
+  header { margin-bottom:28px; }
+  h1 { font-size:28px; margin:0 0 6px; letter-spacing:-0.01em; }
+  .lead { color:var(--muted); margin:0; }
+  .bar { display:flex; gap:10px; align-items:center; margin:0 0 18px; flex-wrap:wrap; }
+  .bar input { flex:1; min-width:200px; padding:9px 12px; border:1px solid var(--line); border-radius:10px; background:var(--panel); color:var(--ink); font:inherit; }
+  .bar .count { color:var(--muted); font-size:14px; }
+
+  .project { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:18px 20px; margin-bottom:14px; }
+  .project:hover { border-color:color-mix(in srgb, var(--accent) 50%, var(--line)); }
+  .head { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+  .head a { font-size:19px; font-weight:700; color:var(--ink); text-decoration:none; }
+  .head a:hover { color:var(--accent); }
+  .head .date { color:var(--muted); font-size:13px; margin-left:auto; }
+  .desc { color:var(--muted); margin:4px 0 10px; font-size:14px; }
+  .chips { display:flex; gap:4px; flex-wrap:wrap; }
+  .chip { font-size:12px; padding:2px 8px; border-radius:999px; background:var(--chip); }
+  ul.items { list-style:none; padding:0; margin:12px 0 0; border-top:1px solid var(--line); }
+  ul.items li { display:flex; gap:12px; align-items:baseline; padding:8px 0; border-bottom:1px dashed var(--line); }
+  ul.items li:last-child { border-bottom:0; padding-bottom:0; }
+  ul.items a { color:var(--ink); text-decoration:none; font-weight:600; font-size:14px; }
+  ul.items a:hover { color:var(--accent); }
+  ul.items .sub { color:var(--muted); font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; min-width:0; }
+  ul.items .d { color:var(--muted); font-size:12px; white-space:nowrap; }
+  .more { display:inline-block; margin-top:10px; font-size:13px; color:var(--accent); text-decoration:none; }
+  .empty { color:var(--muted); padding:24px 0; }
+  footer { margin-top:40px; color:var(--muted); font-size:12px; }
+  @media (max-width:560px) { ul.items .sub { display:none; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>작업 공유</h1>
+    <p class="lead">작업별로 정리한 페이지 모음. 프로젝트를 누르면 해당 폴더의 목록으로 이동.</p>
+  </header>
+
+  <div class="bar">
+    <input id="q" type="search" placeholder="프로젝트·문서 검색" aria-label="검색">
+    <span class="count" id="count"></span>
+  </div>
+  <div id="list"></div>
+
+  <footer>마지막 갱신 <span id="updated"></span></footer>
+</main>
+
+<script src="projects.js"></script>
+<script>
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const projects = (window.PROJECTS || []).map(p => ({ ...p, items: [] }));
+const MAX_ITEMS = 5;
+
+// 각 프로젝트의 manifest(window.FIGS)를 순서대로 읽어 하위 문서 목록을 채움
+function loadManifest(p) {
+  return new Promise(resolve => {
+    if (!p.manifest) return resolve();
+    delete window.FIGS;
+    const s = document.createElement("script");
+    s.src = p.manifest;
+    s.onload = () => { p.items = (window.FIGS || []).map(f => ({ ...f, href: (p.base || "") + f.file })); resolve(); };
+    s.onerror = () => resolve();
+    document.head.appendChild(s);
+  });
+}
+
+function render(q = "") {
+  const k = q.trim().toLowerCase();
+  const match = t => !k || String(t).toLowerCase().includes(k);
+  const shown = projects.map(p => {
+    const pHit = match(p.title + " " + p.desc + " " + (p.tags || []).join(" "));
+    const items = pHit ? p.items : p.items.filter(i => match(i.title + " " + (i.desc || "")));
+    return (pHit || items.length) ? { ...p, items } : null;
+  }).filter(Boolean).sort((a, b) => String(b.updated).localeCompare(String(a.updated)));
+
+  document.getElementById("count").textContent = `프로젝트 ${shown.length}개`;
+  document.getElementById("list").innerHTML = shown.length ? shown.map(p => `
+    <article class="project">
+      <div class="head"><a href="${esc(p.path)}">${esc(p.title)}</a><span class="date">${esc(p.updated)}</span></div>
+      <p class="desc">${esc(p.desc)}</p>
+      <div class="chips">${(p.tags || []).map(t => `<span class="chip">${esc(t)}</span>`).join("")}</div>
+      ${p.items.length ? `<ul class="items">${p.items.slice(0, k ? 99 : MAX_ITEMS).map(i => `
+        <li><a href="${esc(i.href)}">${esc(i.title)}</a><span class="sub">${esc(i.desc)}</span><span class="d">${esc(i.date)}</span></li>`).join("")}</ul>` : ""}
+      ${!k && p.items.length > MAX_ITEMS ? `<a class="more" href="${esc(p.path)}">전체 ${p.items.length}개 보기 →</a>` : ""}
+    </article>`).join("") : `<p class="empty">검색 결과 없음</p>`;
+}
+
+(async () => {
+  for (const p of projects) await loadManifest(p);
+  const latest = projects.map(p => p.updated).sort().pop();
+  document.getElementById("updated").textContent = latest || "-";
+  render();
+  document.getElementById("q").addEventListener("input", e => render(e.target.value));
+})();
+</script>
+</body>
+</html>
